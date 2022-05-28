@@ -2,8 +2,8 @@ import analysis
 import msr
 import pandas as pd
 
-repositorio1 = "app-spring-boot"
-url_repositorio1 = "https://github.com/armandossrecife/app-spring-boot.git"
+repositorio1 = "promocityteste"
+url_repositorio1 = "https://github.com/myplayareas/promocityteste.git"
 my_path_local = "/Users/armandosoaressousa/git/criticalfiles"
 
 print(f'Clona o repositorio {repositorio1} no path {my_path_local}')
@@ -67,6 +67,8 @@ print(f'Quartis da Linhas Modificadas Q1: {lm_q1}, Q2: {lm_q2}, Q3: {lm_q3}, Q4:
 my_query = f"Frequency >= {fc_q3[0]} and lines_modified >= {lm_q3[0]}"
 print(my_query)
 df_arquivos_criticos = df_fc_ml.query(my_query)
+print(f'Arquivos críticos: {df_arquivos_criticos}')
+
 qtd_arquivos_criticos = df_arquivos_criticos.shape[0]
 qtd_arquivos_java = df_fc_ml.shape[0]
 print(f'Qtd arquivos críticos: {qtd_arquivos_criticos}, Total de Arquivos .java {qtd_arquivos_java}')

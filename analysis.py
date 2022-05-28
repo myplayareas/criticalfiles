@@ -139,12 +139,17 @@ def generate_sccater_plot_2(df_fc_ml, repositorio=None):
 
   fig.show()
 
-def generate_box_plot_frequency(df_fc_ml):
+def generate_box_plot_frequency(df_fc_ml, repositorio=None):
   s_boxplot_fc = df_fc_ml['Frequency']
   df_boxplot_fc = s_boxplot_fc.to_frame(name='Frequency')
   df_boxplot_fc['File'] = 'File'
   plt.figure(figsize=(6,4))
   sns.boxplot(x='File', y='Frequency', data=df_boxplot_fc)
+  file_to_save = 'box_plot_frequency' + '.png'
+  if repositorio is not None: 
+    file_to_save = 'box_plot_frequency' + '_' + repositorio + '.png'
+
+  plt.savefig(file_to_save)
   return df_boxplot_fc
 
 def get_quartiles_frequency(df_boxplot_fc):
@@ -154,7 +159,7 @@ def get_quartiles_frequency(df_boxplot_fc):
   fc_q4 = np.percentile(df_boxplot_fc.Frequency , [100])
   return fc_q1, fc_q2, fc_q3, fc_q4
 
-def generate_box_plot_lines_modified(df_fc_ml):
+def generate_box_plot_lines_modified(df_fc_ml, repositorio=None):
   s_boxplot_lm = df_fc_ml['lines_modified']
   df_boxplot_lm = s_boxplot_lm.to_frame(name='lines_modified')
   df_boxplot_lm['File'] = 'File'
@@ -162,6 +167,10 @@ def generate_box_plot_lines_modified(df_fc_ml):
   plt.figure(figsize=(6,4))
   # Constroi o Boxsplot excluindo arquivos que apareceram em menos de 10 commits
   sns.boxplot(x='File', y='lines_modified', data=df_boxplot_lm)
+  file_to_save = 'box_plot_lines_modified' + '.png'
+  if repositorio is not None: 
+    file_to_save = 'box_plot_lines_modified' + '_' + repositorio + '.png'
+  plt.savefig(file_to_save)
   return df_boxplot_lm
 
 def get_quartiles_lines_modified(df_boxplot_lm):
