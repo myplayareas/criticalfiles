@@ -1,52 +1,56 @@
-# modules
-# !pip install pydriller
-#!sudo apt install tree
-
-# Github repository
-# !git clone https://github.com/armandossrecife/promocity.git
-# Acessa libs proprietarias
-# !git clone https://github.com/mining-software-repositories/treinamento.git
-
-#IMPORTS
 from pydriller import Repository
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 import plotly.graph_objects as go
-# Importa funcoes pre-definidas para manipular repositorios usando o Pydriller
-import msr
 from git import Repo
 from subprocess import check_output
 import os
 
 def clona_repositorio(url_repositorio, local_salva_repositorio):
+  try:
     Repo.clone_from(url_repositorio, local_salva_repositorio)
+  except Exception as ex:
+    print(f'Erro: {str(ex)}')
 
-def get_list_of_files_and_directories_updated(nome_repositorio):
-  #list_of_files_and_directories = !cd {repositorio} && tree -i -f
-  list_of_files_and_directories = check_output(f"cd {nome_repositorio} && tree -i -f", shell=True).decode("utf-8").splitlines()
+def temp_user_directory(user_id):
+    user_path = './' + str(user_id)
+
+    if os.path.exists(user_path):
+        return user_path
+    else: 
+        os.makedirs(user_path)
+        return user_path   
+
+def get_list_of_files_and_directories_updated(user_id, nome_repositorio):
+  path_user = temp_user_directory(user_id)
+  path_repositorio = path_user + '/' + nome_repositorio
+  list_of_files_and_directories = check_output(f"cd {path_repositorio} && tree -i -f", shell=True).decode("utf-8").splitlines()
+  print(f'list_of_files_and_directories: {list_of_files_and_directories}')
   temp = f'{nome_repositorio}/'
   result = [each.replace('./', temp) for each in list_of_files_and_directories]
   print(f'get_list_of_files_and_directories_updated: {result}')
   return result
 
-def get_list_of_files_and_directories_src(nome_repositorio, folder_src='src', folder_java='src/main/java/'):
+def get_list_of_files_and_directories_src(user_id, nome_repositorio, folder_src='src', folder_java='src/main/java/'):
   # Escolhe o diretorio do source java
   # Lista apenas arquivos e diretorios do src/main/java
   result = []
-  for item in get_list_of_files_and_directories_updated(nome_repositorio):
+  for item in get_list_of_files_and_directories_updated(user_id, nome_repositorio):
     if folder_src in item:
       if folder_java in item:
         result.append(item)
   print(f'get_list_of_files_and_directories_src: {result}')
   return result
 
-def get_list_locs_of_files(nome_repositorio):
+def get_list_locs_of_files(user_id, nome_repositorio):
+  path_user = temp_user_directory(user_id)
+  path_repositorio = path_user + '/' + nome_repositorio
   # Cria um arquivo contendo a quantidade de LOC por arquivo
-  os.system(f"find {nome_repositorio} -name *.java | xargs wc -l > locarquivosjava.txt")
+  os.system(f"find {path_repositorio} -name *.java | xargs wc -l > {path_repositorio}/locarquivosjava.txt")
   # !find {repositorio} -name *.java | xargs wc -l > locarquivosjava.txt
-  list_locs_of_files = check_output(f"cat locarquivosjava.txt", shell=True).decode("utf-8").splitlines()
+  list_locs_of_files = check_output(f"cat {path_repositorio}/locarquivosjava.txt", shell=True).decode("utf-8").splitlines()
   # Cria uma lista com elementos que representam o LOC e o arquivo
   # (Loc, arquivo)
   result = []
@@ -88,7 +92,7 @@ def merge_dataframes_java_frequency(df_java_frequency_commits, df_java_lines_mod
   df['lines_modified'] = df_java_lines_modified['lines_modified']
   return df
 
-def generate_sccater_plot(df_fc_ml, repositorio=None):
+def generate_sccater_plot(df_fc_ml, repositorio=None, path_to_save=None):
   plt.style.use('ggplot')
   plt.figure(figsize=(12,8))
   sns.scatterplot(data=df_fc_ml, x='lines_modified', y='Frequency')
@@ -104,7 +108,10 @@ def generate_sccater_plot(df_fc_ml, repositorio=None):
     plt.text(df_fc_ml.lines_modified[i], y=df_fc_ml.Frequency[i], s=df_fc_ml.File[i], alpha=0.8, fontsize=8)
 
   #plt.show()
-  file_to_save = repositorio + '.png'
+  file_to_save = 'scatter_plot' + '.png'
+  if repositorio is not None and path_to_save is not None:
+    file_to_save = path_to_save + '/' + repositorio + '.png'
+
   plt.savefig(file_to_save)
 
 def generate_sccater_plot_2(df_fc_ml, repositorio=None):
@@ -139,15 +146,15 @@ def generate_sccater_plot_2(df_fc_ml, repositorio=None):
 
   fig.show()
 
-def generate_box_plot_frequency(df_fc_ml, repositorio=None):
+def generate_box_plot_frequency(df_fc_ml, repositorio=None, path_to_save=None):
   s_boxplot_fc = df_fc_ml['Frequency']
   df_boxplot_fc = s_boxplot_fc.to_frame(name='Frequency')
   df_boxplot_fc['File'] = 'File'
   plt.figure(figsize=(6,4))
   sns.boxplot(x='File', y='Frequency', data=df_boxplot_fc)
   file_to_save = 'box_plot_frequency' + '.png'
-  if repositorio is not None: 
-    file_to_save = 'box_plot_frequency' + '_' + repositorio + '.png'
+  if repositorio is not None and path_to_save is not None: 
+    file_to_save = path_to_save + '/' + 'box_plot_frequency' + '_' + repositorio + '.png'
 
   plt.savefig(file_to_save)
   return df_boxplot_fc
@@ -159,7 +166,7 @@ def get_quartiles_frequency(df_boxplot_fc):
   fc_q4 = np.percentile(df_boxplot_fc.Frequency , [100])
   return fc_q1, fc_q2, fc_q3, fc_q4
 
-def generate_box_plot_lines_modified(df_fc_ml, repositorio=None):
+def generate_box_plot_lines_modified(df_fc_ml, repositorio=None, path_to_save=None):
   s_boxplot_lm = df_fc_ml['lines_modified']
   df_boxplot_lm = s_boxplot_lm.to_frame(name='lines_modified')
   df_boxplot_lm['File'] = 'File'
@@ -168,8 +175,8 @@ def generate_box_plot_lines_modified(df_fc_ml, repositorio=None):
   # Constroi o Boxsplot excluindo arquivos que apareceram em menos de 10 commits
   sns.boxplot(x='File', y='lines_modified', data=df_boxplot_lm)
   file_to_save = 'box_plot_lines_modified' + '.png'
-  if repositorio is not None: 
-    file_to_save = 'box_plot_lines_modified' + '_' + repositorio + '.png'
+  if repositorio is not None and path_to_save is not None: 
+    file_to_save = path_to_save + '/' + 'box_plot_lines_modified' + '_' + repositorio + '.png'
   plt.savefig(file_to_save)
   return df_boxplot_lm
 

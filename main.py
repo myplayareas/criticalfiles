@@ -6,35 +6,40 @@ repositorio1 = "promocityteste"
 url_repositorio1 = "https://github.com/myplayareas/promocityteste.git"
 my_path_local = "/Users/armandosoaressousa/git/criticalfiles"
 
-print(f'Clona o repositorio {repositorio1} no path {my_path_local}')
-path_to_save_clone = my_path_local + '/' + repositorio1 
+user_id = 1
+temp_user_directory = analysis.temp_user_directory(user_id) 
+print(f'{temp_user_directory}')
+
+print(f'Clona o repositorio {repositorio1} no path {temp_user_directory}')
+path_to_save_clone = temp_user_directory + '/' + repositorio1 
+
 analysis.clona_repositorio(url_repositorio1, path_to_save_clone)
 
 # Substitui o . pelo repositorio/
-list_of_files_and_directories = analysis.get_list_of_files_and_directories_updated(repositorio1)
+list_of_files_and_directories = analysis.get_list_of_files_and_directories_updated(user_id, repositorio1)
 
 # Escolhe o diretorio do source java
 # Lista apenas arquivos e diretorios do src/main/java
-list_of_files_and_directories_src = analysis.get_list_of_files_and_directories_src(repositorio1)
+list_of_files_and_directories_src = analysis.get_list_of_files_and_directories_src(user_id, repositorio1)
 
 # Cria um arquivo contendo a quantidade de LOC por arquivo
-list_locs_of_files_updated = analysis.get_list_locs_of_files(repositorio1)
+list_locs_of_files_updated = analysis.get_list_locs_of_files(user_id, repositorio1)
 
 # Lista todos os commits de um repositorio
-list_commits_promocity = msr.list_all_commits(repositorio1)
+list_commits_promocity = msr.list_all_commits(path_to_save_clone)
 
 # Lista todos os arquivos modificados em cada commit
-dict_modified_files_promocity = msr.list_all_modified_files_in_commits(repositorio1)
+dict_modified_files_promocity = msr.list_all_modified_files_in_commits(path_to_save_clone)
 
 # Lista todos os commits e seus arquivos modificados
 for commit, lista_files in dict_modified_files_promocity.items(): 
   print(commit, [file.filename for file in lista_files])
 
 # 5. Lista a frequência dos arquivos nos commits
-dict_frequency_files_commits = msr.get_files_frequency_in_commits(repositorio1)
+dict_frequency_files_commits = msr.get_files_frequency_in_commits(path_to_save_clone)
 
 # 6. Lista a Quantidade de Linhas de Código Modificadas em cada Arquivo
-dict_lines_modified_in_files = msr.get_number_of_lines_of_code_changes_in_commits(repositorio1)
+dict_lines_modified_in_files = msr.get_number_of_lines_of_code_changes_in_commits(path_to_save_clone)
 dict_java_frequency_commits = analysis.get_dict_java_frequency_commits(dict_frequency_files_commits)
 dict_java_lines_modified = analysis.get_dict_java_lines_modified(dict_lines_modified_in_files)
 
@@ -50,15 +55,15 @@ df_fc_ml
 
 print(f'{df_fc_ml}')
 
-analysis.generate_sccater_plot(df_fc_ml, repositorio1)
+analysis.generate_sccater_plot(df_fc_ml, repositorio1, path_to_save_clone)
 # generate_sccater_plot_2(df_fc_ml, repositorio1)
 
-df_boxplot_fc = analysis.generate_box_plot_frequency(df_fc_ml)
+df_boxplot_fc = analysis.generate_box_plot_frequency(df_fc_ml, repositorio1, path_to_save_clone)
 
 fc_q1, fc_q2, fc_q3, fc_q4 = analysis.get_quartiles_frequency(df_boxplot_fc)
 print(f'Quartis da Frequencia de Commits Q1: {fc_q1}, Q2: {fc_q2}, Q3: {fc_q3}, Q4: {fc_q4}')
 
-df_boxplot_lm = analysis.generate_box_plot_lines_modified(df_fc_ml)
+df_boxplot_lm = analysis.generate_box_plot_lines_modified(df_fc_ml, repositorio1, path_to_save_clone)
 
 lm_q1, lm_q2, lm_q3, lm_q4 = analysis.get_quartiles_lines_modified(df_boxplot_lm)
 print(f'Quartis da Linhas Modificadas Q1: {lm_q1}, Q2: {lm_q2}, Q3: {lm_q3}, Q4: {lm_q4}')
